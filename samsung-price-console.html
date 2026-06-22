@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>삼성 시세 콘솔</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" crossorigin>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F6FA;--card:#fff;--line:#EAECF2;--line2:#F2F4F8;
+  --txt:#111827;--sub:#6B7280;--faint:#9CA3AF;
+  --blue:#1A73E8;--blue-s:#E8F0FE;--blue-d:#1557B0;
+  --red:#E53935;--red-s:#FEE8E8;
+  --green:#0D9F6E;--green-s:#E6F7F1;
+  --orange:#F59E0B;--orange-s:#FEF3C7;
+  --sans:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+}
+html,body{font-family:var(--sans);background:var(--bg);color:var(--txt);-webkit-font-smoothing:antialiased;height:100%}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+#list-view{min-height:100vh}
+.app-header{background:#fff;border-bottom:1px solid var(--line);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30}
+.app-header .logo{font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--txt)}
+.app-header .logo span{color:var(--blue)}
+.asof-badge{font-size:11px;color:var(--faint);background:var(--line2);padding:4px 9px;border-radius:20px;font-weight:600}
+.search-bar{padding:12px 16px 0}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--faint);fill:none}
+.search-wrap input{width:100%;padding:11px 14px 11px 40px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-size:15px;font-family:var(--sans);color:var(--txt);outline:none;transition:.15s}
+.search-wrap input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-s)}
+.cat-scroll{display:flex;gap:8px;padding:12px 16px 10px;overflow-x:auto;scrollbar-width:none}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cat-pill{flex:none;padding:7px 16px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-size:13.5px;font-weight:600;color:var(--sub);transition:.15s;white-space:nowrap}
+.cat-pill.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sort-row{display:flex;align-items:center;justify-content:space-between;padding:4px 16px 8px}
+.sort-count{font-size:13px;color:var(--sub)}.sort-count b{color:var(--txt);font-weight:700}
+.sort-sel{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:13px;color:var(--txt);font-family:var(--sans);outline:none;cursor:pointer}
+.product-list{padding:0 12px 80px;display:flex;flex-direction:column;gap:8px}
+.prod-card{background:#fff;border-radius:16px;border:1px solid var(--line);padding:14px 16px;cursor:pointer;transition:.12s;display:flex;flex-direction:column;gap:10px}
+.prod-card:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(26,115,232,.10)}
+.prod-card:active{transform:scale(.99)}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pc-name{font-size:15px;font-weight:700;line-height:1.35;color:var(--txt);flex:1}
+.pc-badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+.badge.cat{background:var(--blue-s);color:var(--blue)}
+.badge.variant{background:var(--line2);color:var(--sub)}
+.pc-spec{font-size:12px;color:var(--faint);margin-top:1px}
+.pc-price-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.pc-best{display:flex;align-items:baseline;gap:6px}
+.pc-best-price{font-size:22px;font-weight:800;color:var(--txt);letter-spacing:-.02em}
+.pc-best-mall{font-size:12px;font-weight:700;background:var(--green-s);color:var(--green);padding:3px 8px;border-radius:6px}
+.pc-malls-mini{display:flex;gap:6px;flex-wrap:wrap}
+.mmini{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:3px}
+.mmini .mini-logo{width:14px;height:14px;border-radius:3px;overflow:hidden;flex-shrink:0}
+.mmini .mini-logo svg{width:14px;height:14px}
+.mmini.best .mp{color:var(--green);font-weight:700}
+.pc-compare{width:100%;border-top:1px solid var(--line2);padding-top:10px;display:flex;align-items:center;justify-content:space-between}
+.pc-compare-label{font-size:12px;color:var(--faint)}
+.pc-arrow{font-size:18px;color:var(--blue)}
+.pc-nodata{font-size:13px;color:var(--faint);font-style:italic}
+#detail-view{display:none;min-height:100vh;background:var(--bg)}
+.dv-header{background:#fff;border-bottom:1px solid var(--line);padding:0 16px;height:56px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:30}
+.back-btn{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:.15s;color:var(--txt)}
+.back-btn:hover{background:var(--line2)}
+.dv-header-name{font-size:16px;font-weight:700;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.dv-header-dn{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--blue)}
+.dv-hero{background:#fff;padding:20px 16px 18px;border-bottom:1px solid var(--line)}
+.dv-cat-row{display:flex;gap:6px;margin-bottom:10px}
+.dv-name{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1.3;margin-bottom:5px}
+.dv-spec{font-size:13px;color:var(--sub)}
+.dv-price-block{margin-top:16px}
+.dv-price-main{font-size:32px;font-weight:900;letter-spacing:-.03em;color:var(--txt);line-height:1}
+.dv-price-sub{font-size:13px;color:var(--sub);margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dn-btn{display:inline-flex;align-items:center;gap:5px;background:var(--blue-s);color:var(--blue);padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-top:14px;transition:.15s}
+.dn-btn:hover{background:var(--blue);color:#fff}
+.section{background:#fff;margin-top:8px;padding:18px 16px}
+.section-title{font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.section-title .cnt{font-size:12px;font-weight:600;color:var(--sub);background:var(--line2);padding:2px 8px;border-radius:999px}
+.mall-list{display:flex;flex-direction:column;gap:2px}
+.mall-item{display:flex;align-items:center;padding:13px 0;border-bottom:1px solid var(--line2);gap:12px;text-decoration:none;color:inherit;cursor:pointer;transition:.12s;border-radius:0}
+.mall-item:last-child{border-bottom:none;padding-bottom:0}
+.mall-item:active{background:var(--line2);margin:0 -16px;padding-left:16px;padding-right:16px}
+.mall-na-row{opacity:.5;cursor:default;pointer-events:none}
+.mall-logo{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.mall-logo svg{width:38px;height:38px}
+.mall-info{flex:1;min-width:0}
+.mall-name{font-size:14px;font-weight:700}
+.mall-sub{font-size:12px;color:var(--faint);margin-top:1px}
+.mall-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.mall-price{font-size:18px;font-weight:800;color:var(--txt);letter-spacing:-.02em}
+.mall-diff{font-size:12px;font-weight:600;color:var(--red)}
+.mall-diff.same{color:var(--green)}
+.mall-best-badge{background:var(--green-s);color:var(--green);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+.mall-na{font-size:14px;font-weight:600;color:var(--faint)}
+.price-stats{background:#fff;margin-top:8px;padding:18px 16px 14px}
+.chart-svg-wrap{width:100%;overflow:visible}
+.stat-row-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:14px}
+.stat-row{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line2)}
+.stat-row:last-child{border-bottom:none}
+.sr-icon{font-size:12px;width:16px;text-align:center;flex-shrink:0}
+.sr-label{font-size:15px;color:var(--sub);flex:1;font-weight:500}
+.sr-val{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.sr-val.high{color:#E53935}.sr-val.avg{color:var(--txt)}.sr-val.low{color:#E53935}
+.note-box{background:var(--orange-s);border-radius:12px;padding:12px 14px;display:flex;gap:9px;margin-top:8px}
+.note-box svg{width:16px;height:16px;flex-shrink:0;stroke:var(--orange);fill:none;margin-top:1px}
+.note-text{font-size:12.5px;color:#92400E;line-height:1.6}
+.dv-footer{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px}
+.dv-footer a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-radius:13px;font-size:14px;font-weight:700;transition:.15s}
+.dv-footer .btn-dn{background:var(--blue);color:#fff}
+.dv-footer .btn-dn:hover{background:var(--blue-d)}
+.empty{text-align:center;padding:60px 20px;color:var(--sub)}
+.empty-icon{font-size:42px;margin-bottom:12px}
+.empty-msg{font-size:16px;font-weight:700;color:var(--txt);margin-bottom:6px}
+</style>
+</head>
+<body>
+<div id="list-view">
+  <header class="app-header">
+    <div class="logo">삼성<span>시세</span></div>
+    <span class="asof-badge" id="asof-badge">2026-06-22 기준</span>
+  </header>
+  <div class="search-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" type="search" placeholder="모델명, 스펙 검색 (예: 울트라, 프로360, 512GB)" autocomplete="off">
+    </div>
+  </div>
+  <div class="cat-scroll" id="cats"></div>
+  <div class="sort-row">
+    <div class="sort-count"><b id="count">0</b>개 모델</div>
+    <select class="sort-sel" id="sortSel">
+      <option value="default">카테고리순</option>
+      <option value="asc">최저가 낮은순</option>
+      <option value="desc">최저가 높은순</option>
+    </select>
+  </div>
+  <div class="product-list" id="prodList"></div>
+</div>
+<div id="detail-view">
+  <header class="dv-header">
+    <button class="back-btn" id="backBtn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="dv-header-name" id="dvHeaderName"></div>
+    <a id="dvDnBtn" href="#" target="_blank" rel="noopener" class="dv-header-dn">다나와 ↗</a>
+  </header>
+  <div id="dvBody"></div>
+</div>
+<script>
+const ASOF="2026-06-22";
+const CATS=["노트북","휴대폰","웨어러블","태블릿"];
+const MK=[["c","쿠팡"],["n","네이버"],["e","11번가"],["g","G마켓"]];
+
+function mallSVG(label){
+  if(label==='쿠팡'){
+    const cx=20,cy=19.5,r1=16,r2=13,sp=20;
+    let pts='';
+    for(let i=0;i<sp*2;i++){const a=(i*Math.PI/sp)-Math.PI/2;const r=i%2===0?r1:r2;pts+=(i===0?'M':'L')+(cx+r*Math.cos(a)).toFixed(2)+','+(cy+r*Math.sin(a)).toFixed(2)+' ';}
+    return `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="9" fill="#fff"/><path d="${pts}Z" fill="#E8112D"/><text x="20" y="22.5" text-anchor="middle" font-family="Arial,sans-serif" font-size="5.8" font-weight="900" fill="white" letter-spacing="-0.1">coupang</text></svg>`;
+  }
+  if(label==='네이버') return `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="9" fill="#03C75A"/><text x="20" y="28" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="23" font-weight="900" fill="white">N</text></svg>`;
+  if(label==='11번가') return `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="9" fill="#E5004F"/><text x="7" y="26" font-family="Arial Black,Arial,sans-serif" font-size="17" font-weight="900" fill="white">11</text><polygon points="27,13 27,26 36,19.5" fill="white"/></svg>`;
+  if(label==='G마켓') return `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="9" fill="#00B87A"/><text x="19" y="27" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="24" font-weight="900" fill="white">G</text><circle cx="25" cy="19" r="2.2" fill="#1633B8"/></svg>`;
+  return '';
+}
+const MALL_STYLE={
+  쿠팡:{get svg(){return mallSVG('쿠팡')}},
+  네이버:{get svg(){return mallSVG('네이버')}},
+  "11번가":{get svg(){return mallSVG('11번가')}},
+  G마켓:{get svg(){return mallSVG('G마켓')}}
+};
+
+// RAW: cat, name, variant, screen, cpu, ram, storage, {c,n,e,g}, history{x,y}
+const RAW=[
+ ["노트북","갤럭시북5 NT750XHW-A58A","일반","15.6\"","코어 U5 225U","8GB","256GB",{c:null,n:1248000,e:1249000,g:1248990},{x:["26.06.16","현재"],y:[1228000,1228000]}],
+ ["노트북","갤럭시북5 NT750XHD-KC58G","일반","15.6\"","코어 U5 225U","8GB","256GB",{c:null,n:1367000,e:null,g:null},null],
+ ["노트북","갤럭시북5 NT750XHW-A51A","일반","15.6\"","코어 U5 225U","16GB","256GB",{c:null,n:1488000,e:1499000,g:1499000},{x:["26.06.16","현재"],y:[1410470,1449000]}],
+ ["노트북","갤럭시북5 NT750XHW-A71A","일반","15.6\"","코어 U7 255U","16GB","256GB",{c:null,n:1698000,e:1698900,g:1698900},{x:["26.06.16","현재"],y:[1697990,1698000]}],
+ ["노트북","갤럭시북5 NT750XHD-KC51S","일반","15.6\"","코어 U5 225U","16GB","512GB",{c:null,n:1725000,e:null,g:null},null],
+ ["노트북","갤럭시북5 NT750XHD-KD72G","일반","15.6\"","코어 U7 255U","32GB","512GB",{c:null,n:2299000,e:2268990,g:2336050},{x:["26.05.26","26.06.02","26.06.09","26.06.16","현재"],y:[2198890,2190000,2184000,2183000,2182000]}],
+ ["노트북","갤럭시북5 프로 NT960XHA-K51A","프로","16\"","코어 U5 226V","16GB","256GB",{c:null,n:1989010,e:1988770,g:2052960},{x:["26.05.26","26.06.02","26.06.09","26.06.16","현재"],y:[1998890,1998900,1988800,1988800,1988770]}],
+ ["노트북","갤럭시북5 프로 NT940XHA-K51A","프로","14\"","코어 U5 226V","16GB","256GB",{c:null,n:2088710,e:2169000,g:2099000},{x:["26.06.16","현재"],y:[2048890,2088710]}],
+ ["노트북","갤럭시북5 프로 NT960XHZ-A51A","프로","16\"","코어 U5 226V","16GB","256GB",{c:null,n:2149000,e:2149000,g:2149000},{x:["26.06.16","현재"],y:[2148990,2149000]}],
+ ["노트북","갤럭시북5 프로 NT940XHA-KC51G","프로","14\"","코어 U5 226V","16GB","512GB",{c:null,n:2320000,e:2448680,g:2404220},{x:["26.06.16","현재"],y:[2397940,2320000]}],
+ ["노트북","갤럭시북5 프로 NT960XHA-K71A","프로","16\"","코어 U7 256V","16GB","512GB",{c:null,n:2539000,e:2754080,g:2599000},{x:["26.06.16","현재"],y:[2498990,2539000]}],
+ ["노트북","갤럭시북5 프로 NT940XHA-K71AR","프로","14\"","코어 U7 258V","32GB","512GB",{c:null,n:2998000,e:3295600,g:2999000},{x:["26.06.16","현재"],y:[2497990,2998000]}],
+ ["노트북","갤럭시북5 프로 NT960XHZ-A52A","프로","16\"","코어 U5 228V","32GB","256GB",{c:3267000,n:2489000,e:2488990,g:2577620},{x:["26.05.26","26.06.02","26.06.09","26.06.16","현재"],y:[2388990,2209000,2388990,2388990,2388990]}],
+ ["노트북","갤럭시북5 프로360 NT960QHA-KD72G","프로360","16\"","코어 U7 258V","32GB","1TB",{c:3379000,n:3149000,e:3388880,g:3411840},{x:["26.05.26","26.06.02","26.06.09","26.06.16","현재"],y:[3298890,3198890,3198890,3148000,3149000]}],
+ ["노트북","갤럭시북5 프로360 NT960QHA-KA72S","프로360","16\"","코어 U7 258V","32GB","1TB",{c:3779000,n:3199000,e:3782290,g:3411840},{x:["26.05.26","26.06.02","26.06.09","26.06.16","현재"],y:[3299000,3198990,3198890,3199000,3199000]}],
+ ["휴대폰","갤럭시 S26 (자급제)","S26","6.3\"","엑시노스2600","12GB","256GB",{c:1141100,n:1138000,e:1130630,g:1166850},{x:["26.06.16","현재"],y:[1064320,1130630]}],
+ ["휴대폰","갤럭시 S26 (자급제)","S26","6.3\"","엑시노스2600","12GB","512GB",{c:1371300,n:1319000,e:null,g:1355550},{x:["26.06.16","현재"],y:[1238400,1319000]}],
+ ["휴대폰","갤럭시 S26+ (자급제)","S26+","6.7\"","엑시노스2600","12GB","256GB",{c:1321300,n:1363600,e:null,g:1351090},{x:["26.06.16","현재"],y:[1277760,1321300]}],
+ ["휴대폰","갤럭시 S26+ (자급제)","S26+","6.7\"","엑시노스2600","12GB","512GB",{c:1551500,n:1601800,e:null,g:1586510},{x:["26.06.16","현재"],y:[1464350,1454380]}],
+ ["휴대폰","갤럭시 S26 울트라 (자급제)","울트라","6.9\"","스냅드래곤8 엘리트","12GB","256GB",{c:1635600,n:1633900,e:1597990,g:1651190},{x:["26.06.16","현재"],y:[1531700,1597990]}],
+ ["휴대폰","갤럭시 S26 울트라 (자급제)","울트라","6.9\"","스냅드래곤8 엘리트","12GB","512GB",{c:null,n:1849000,e:null,g:1907910},{x:["26.06.16","현재"],y:[1804360,1849000]}],
+ ["휴대폰","갤럭시 S26 울트라 (자급제)","울트라","6.9\"","스냅드래곤8 엘리트","16GB","1TB",{c:2316300,n:2245600,e:2209960,g:2368500},{x:["26.06.16","현재"],y:[2292400,2209960]}],
+ ["웨어러블","갤럭시 워치8 40mm","BT","1.33\"","-","2GB","32GB",{c:300000,n:268900,e:269800,g:269190},{x:["26.05.26","26.06.02","26.06.09","26.06.16","현재"],y:[279000,269750,275000,274000,258000]}],
+ ["웨어러블","갤럭시 워치8 44mm","BT","1.45\"","-","2GB","32GB",{c:406000,n:436000,e:null,g:426000},{x:["26.06.16","현재"],y:[408000,409000]}],
+ ["웨어러블","갤럭시 워치8 클래식 46mm","BT","1.33\"","-","2GB","64GB",{c:499490,n:540500,e:null,g:535100},{x:["26.06.16","현재"],y:[459000,499490]}],
+ ["웨어러블","갤럭시 워치8 40mm","LTE","1.33\"","-","2GB","32GB",{c:427400,n:427400,e:null,g:417400},{x:["26.06.16","현재"],y:[402580,417400]}],
+ ["웨어러블","갤럭시 워치8 44mm","LTE","1.45\"","-","2GB","32GB",{c:459100,n:465000,e:null,g:474820},{x:["26.06.16","현재"],y:[439460,455000]}],
+ ["웨어러블","갤럭시 워치8 클래식 46mm","LTE","1.33\"","-","2GB","64GB",{c:564500,n:569500,e:null,g:581520},{x:["26.06.16","현재"],y:[538220,564500]}],
+ ["웨어러블","갤럭시 워치 울트라 2025 47mm","LTE","1.47\"","-","2GB","64GB",{c:786240,n:799000,e:null,g:810810},null],
+ ["태블릿","갤럭시탭 S11 (Wi-Fi)","일반","11\"","디멘시티 9400+","12GB","128GB",{c:1069000,n:1023000,e:1048000,g:1007410},null],
+ ["태블릿","갤럭시탭 S11 (Wi-Fi)","일반","11\"","디멘시티 9400+","12GB","256GB",null,null],
+ ["태블릿","갤럭시탭 S11 (Wi-Fi)","일반","11\"","디멘시티 9400+","12GB","512GB",null,null],
+ ["태블릿","갤럭시탭 S11 (5G)","일반","11\"","디멘시티 9400+","12GB","128GB",{c:1273000,n:1273000,e:1332630,g:null},null],
+ ["태블릿","갤럭시탭 S11 울트라 (Wi-Fi)","울트라","14.6\"","디멘시티 9400+","12GB","256GB",{c:1626000,n:1692000,e:1591770,g:1626000},null],
+ ["태블릿","갤럭시탭 S11 울트라 (Wi-Fi)","울트라","14.6\"","디멘시티 9400+","12GB","512GB",null,null],
+ ["태블릿","갤럭시탭 S11 울트라 (Wi-Fi)","울트라","14.6\"","디멘시티 9400+","16GB","1TB",null,null],
+ ["태블릿","갤럭시탭 S11 울트라 (5G)","울트라","14.6\"","디멘시티 9400+","12GB","256GB",{c:2099000,n:1969000,e:null,g:1936650},null],
+];
+
+const DATA=RAW.map((r,i)=>{
+  const m=r[7];
+  let best=null,bestMall=null;
+  if(m) MK.forEach(([k,l])=>{const v=m[k];if(v!=null&&(best==null||v<best)){best=v;bestMall=l;}});
+  return {i,cat:r[0],name:r[1],variant:r[2],screen:r[3],cpu:r[4],ram:r[5],storage:r[6],malls:m,best,bestMall,history:r[8]||null};
+});
+
+const W=n=>n==null?null:n.toLocaleString("ko-KR")+"원";
+const dnURL=n=>"https://search.danawa.com/dsearch.php?k1="+encodeURIComponent(n);
+let state={cat:"전체",q:"",sort:"default"};
+
+function buildCats(){
+  const el=document.getElementById("cats");
+  const all=[["전체",DATA.length]].concat(CATS.map(c=>[c,DATA.filter(d=>d.cat===c).length]));
+  el.innerHTML=all.map(([c,n])=>`<button class="cat-pill${state.cat===c?" on":""}" data-c="${c}">${c} <b style="font-size:11px;opacity:.6">${n}</b></button>`).join("");
+  el.querySelectorAll(".cat-pill").forEach(b=>b.onclick=()=>{state.cat=b.dataset.c;render();});
+}
+
+function filtered(){
+  let rows=DATA.filter(d=>state.cat==="전체"||d.cat===state.cat);
+  const q=state.q.trim().toLowerCase();
+  if(q) rows=rows.filter(d=>(d.name+" "+d.variant+" "+d.cat+" "+d.storage+" "+d.ram).toLowerCase().includes(q));
+  if(state.sort==="asc") rows=[...rows].sort((a,b)=>(a.best??9e15)-(b.best??9e15));
+  if(state.sort==="desc") rows=[...rows].sort((a,b)=>(b.best??-1)-(a.best??-1));
+  return rows;
+}
+
+function render(){
+  buildCats();
+  const rows=filtered();
+  document.getElementById("count").textContent=rows.length;
+  const list=document.getElementById("prodList");
+  if(!rows.length){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">검색 결과가 없습니다</div></div>`;
+    return;
+  }
+  list.innerHTML=rows.map(d=>{
+    const hasData=d.malls!=null;
+    const avail=hasData?MK.filter(([k])=>d.malls[k]!=null):[];
+    const miniMalls=avail.map(([k,l])=>({label:l,price:d.malls[k],best:l===d.bestMall})).sort((a,b)=>a.price-b.price);
+    return `<div class="prod-card" data-i="${d.i}">
+      <div class="pc-top">
+        <div><div class="pc-name">${d.name}</div><div class="pc-spec">${d.screen} · ${d.ram} · ${d.storage}</div></div>
+        <div class="pc-badges"><span class="badge cat">${d.cat}</span><span class="badge variant">${d.variant}</span></div>
+      </div>
+      ${hasData&&d.best!=null?`
+        <div class="pc-price-row">
+          <div class="pc-best"><span class="pc-best-price">${W(d.best)}</span><span class="pc-best-mall">${d.bestMall} 최저</span></div>
+        </div>
+        <div class="pc-malls-mini">
+          ${miniMalls.map(m=>`<span class="mmini${m.best?" best":""}"><span class="mini-logo">${MALL_STYLE[m.label].svg}</span><span class="mp">${W(m.price)}</span></span>`).join("")}
+        </div>
+        <div class="pc-compare"><span class="pc-compare-label">쇼핑몰 최저가 비교 ${avail.length}</span><span class="pc-arrow">›</span></div>
+      `:`<div class="pc-nodata">몰별 개별 데이터 없음</div><div class="pc-compare"><span class="pc-compare-label">다나와에서 보기</span><span class="pc-arrow">›</span></div>`}
+    </div>`;
+  }).join("");
+  list.querySelectorAll(".prod-card").forEach(el=>{el.onclick=()=>openDetail(parseInt(el.dataset.i));});
+}
+
+function openDetail(i){
+  const d=DATA.find(x=>x.i===i);
+  if(!d) return;
+  document.getElementById("dvHeaderName").textContent=d.name;
+  document.getElementById("dvDnBtn").href=dnURL(d.name);
+  const avail=d.malls?MK.filter(([k])=>d.malls[k]!=null):[];
+  const allPrices=avail.map(([k])=>d.malls[k]);
+  const maxP=allPrices.length?Math.max(...allPrices):0;
+  const minP=allPrices.length?Math.min(...allPrices):0;
+  const avgP=allPrices.length?Math.round(allPrices.reduce((a,b)=>a+b,0)/allPrices.length):0;
+  const sortedMalls=MK.map(([k,l])=>({key:k,label:l,price:d.malls?d.malls[k]:null})).sort((a,b)=>{if(a.price==null&&b.price==null)return 0;if(a.price==null)return 1;if(b.price==null)return -1;return a.price-b.price;});
+  const mallURL=(label,name)=>{
+    const q=encodeURIComponent(name);
+    if(label==='쿠팡') return `https://www.coupang.com/np/search?q=${q}`;
+    if(label==='네이버') return `https://search.shopping.naver.com/search/all?query=${q}`;
+    if(label==='11번가') return `https://search.11st.co.kr/Search.tmall?kwd=${q}`;
+    if(label==='G마켓') return `https://search.gmarket.co.kr/search?keyword=${q}`;
+    return '#';
+  };
+  const mallListHTML=sortedMalls.map(m=>{
+    const isBest=m.label===d.bestMall;
+    const diff=m.price!=null&&minP>0?m.price-minP:null;
+    const url=mallURL(m.label,d.name);
+    return `<a href="${url}" target="_blank" rel="noopener" class="mall-item${m.price==null?' mall-na-row':''}">
+      <div class="mall-logo">${MALL_STYLE[m.label].svg}</div>
+      <div class="mall-info"><div class="mall-name">${m.label}${isBest?` <span class="mall-best-badge">최저가</span>`:""}</div><div class="mall-sub">${m.price!=null?"무료배송":""}</div></div>
+      <div class="mall-right">${m.price!=null?`<div class="mall-price">${W(m.price)}</div>${diff>0?`<div class="mall-diff">+${W(diff)}</div>`:`<div class="mall-diff same">최저가</div>`}`:`<div class="mall-na">–</div>`}</div>
+      ${m.price!=null?`<div style="color:#C5CDD9;font-size:16px;flex-shrink:0">›</div>`:''}
+    </a>`;
+  }).join("");
+
+  // 히스토리 또는 몰별 가격으로 통계 계산
+  let statsData = allPrices;
+  if(d.history && d.history.y) statsData = d.history.y;
+  const sMax = statsData.length ? Math.max(...statsData) : maxP;
+  const sMin = statsData.length ? Math.min(...statsData) : minP;
+  const sAvg = statsData.length ? Math.round(statsData.reduce((a,b)=>a+b,0)/statsData.length) : avgP;
+
+  document.getElementById("dvBody").innerHTML=`
+    <div class="dv-hero">
+      <div class="dv-cat-row"><span class="badge cat">${d.cat}</span><span class="badge variant">${d.variant}</span></div>
+      <div class="dv-name">${d.name}</div>
+      <div class="dv-spec">${d.screen} · ${d.cpu} · ${d.ram} / ${d.storage}</div>
+      ${d.best!=null?`<div class="dv-price-block">
+        <div class="dv-price-main">${W(d.best)}</div>
+        <div class="dv-price-sub"><span>${d.bestMall} 기준 4개 몰 최저</span></div>
+        <a href="${dnURL(d.name)}" target="_blank" rel="noopener" class="dn-btn">다나와에서 최신가 확인 ↗</a>
+      </div>`:''}
+    </div>
+    <div class="section">
+      <div class="section-title">쇼핑몰 최저가 비교 <span class="cnt">${avail.length}개 몰</span></div>
+      <div class="mall-list">${mallListHTML}</div>
+    </div>
+    ${(d.history||allPrices.length>=2)?`
+    <div class="price-stats">
+      <div class="section-title">가격 그래프</div>
+      <div id="chartWrap_${d.i}" style="overflow:visible;padding:0 4px"></div>
+      <div class="stat-row-list">
+        <div class="stat-row"><span class="sr-icon" style="color:#E53935">▲</span><span class="sr-label">최고가</span><span class="sr-val high">${W(sMax)}</span></div>
+        <div class="stat-row"><span class="sr-icon" style="color:#9CA3AF">—</span><span class="sr-label">평균가</span><span class="sr-val avg">${W(sAvg)}</span></div>
+        <div class="stat-row"><span class="sr-icon" style="color:#E53935">▼</span><span class="sr-label">최저가</span><span class="sr-val low">${W(sMin)}</span></div>
+      </div>
+    </div>`:''}
+    <div style="padding:0 12px 12px">
+      <div class="note-box">
+        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="note-text">– 는 다나와 요약에 해당 몰이 없는 경우입니다. 가격은 ${ASOF} 조사 기준이며 실시간 변동됩니다.</div>
+      </div>
+    </div>
+    <div style="height:90px"></div>`;
+
+  document.getElementById("list-view").style.display="none";
+  const dv=document.getElementById("detail-view");
+  dv.style.display="block";
+  dv.scrollTop=0; window.scrollTo(0,0);
+  if(d.history||allPrices.length>=2) requestAnimationFrame(()=>drawChart(d,allPrices,minP,maxP,avgP));
+}
+
+document.getElementById("backBtn").onclick=()=>{
+  document.getElementById("detail-view").style.display="none";
+  document.getElementById("list-view").style.display="block";
+};
+document.getElementById("q").addEventListener("input",e=>{state.q=e.target.value;render();});
+document.getElementById("sortSel").addEventListener("change",e=>{state.sort=e.target.value;render();});
+
+function drawChart(d,allPrices,minP,maxP,avgP){
+  const wrap=document.getElementById("chartWrap_"+d.i);
+  if(!wrap) return;
+  const W=wrap.clientWidth||340;
+  const H=200,PL=16,PR=90,PT=28,PB=36;
+  const IW=W-PL-PR,IH=H-PT-PB;
+  let labels,values;
+  if(d.history&&d.history.x&&d.history.y&&d.history.y.length>=2){labels=d.history.x;values=d.history.y;}
+  else{const pts=MK.map(([k,l])=>({label:l,price:d.malls?d.malls[k]:null})).filter(p=>p.price!=null);labels=pts.map(p=>p.label);values=pts.map(p=>p.price);}
+  const n=values.length; if(n<2){wrap.innerHTML='';return;}
+  const vMin=Math.min(...values),vMax=Math.max(...values);
+  const vAvg=Math.round(values.reduce((a,b)=>a+b,0)/n);
+  const range=vMax-vMin||1,yMin=vMin-range*.15,yMax=vMax+range*.15;
+  function px(i){return PL+(i/(n-1))*IW;} function py(v){return PT+IH*(1-(v-yMin)/(yMax-yMin));}
+  const coords=values.map((v,i)=>({x:px(i),y:py(v),v}));
+  const lp=coords.map((c,i)=>(i===0?`M${c.x.toFixed(1)},${c.y.toFixed(1)}`:`L${c.x.toFixed(1)},${c.y.toFixed(1)}`)).join(' ');
+  const fp=lp+` L${coords[n-1].x.toFixed(1)},${(PT+IH).toFixed(1)} L${coords[0].x.toFixed(1)},${(PT+IH).toFixed(1)} Z`;
+  const hiIdx=coords.reduce((a,c,i)=>c.v>coords[a].v?i:a,0);
+  const loIdx=coords.reduce((a,c,i)=>c.v<coords[a].v?i:a,0);
+  const pyH=py(vMax),pyL=py(vMin);
+  const fmt=v=>v.toLocaleString("ko-KR");
+  const step=Math.max(1,Math.floor((n-1)/4));
+  const xTicks=[];
+  for(let i=0;i<n;i+=step)xTicks.push(i);
+  if(xTicks[xTicks.length-1]!==n-1)xTicks.push(n-1);
+  const xLabels=xTicks.map(i=>{const anchor=i===0?"start":i===n-1?"end":"middle";return `<text x="${px(i).toFixed(1)}" y="${(H-5).toFixed(1)}" text-anchor="${anchor}" font-family="'Apple SD Gothic Neo',Arial,sans-serif" font-size="10" fill="#9CA3AF" font-weight="500">${labels[i]}</text>`;}).join('');
+  const dots=coords.map((c,i)=>{const isH=i===hiIdx,isL=i===loIdx;const col=isH?"#E53935":isL?"#0D9F6E":"#1A73E8";return `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${isH||isL?5:3}" fill="${col}" stroke="white" stroke-width="1.5"/>`;}).join('');
+  const uid="cf_"+d.i;
+  wrap.innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:${H}px;overflow:visible">
+    <defs><linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1A73E8" stop-opacity="0.18"/><stop offset="100%" stop-color="#1A73E8" stop-opacity="0.01"/></linearGradient>
+    <clipPath id="clip_${uid}"><rect x="${PL}" y="${PT}" width="${IW}" height="${IH}"/></clipPath></defs>
+    <line x1="${PL}" y1="${pyH.toFixed(1)}" x2="${(W-PR).toFixed(1)}" y2="${pyH.toFixed(1)}" stroke="#E53935" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+    <text x="${(W-PR+6).toFixed(1)}" y="${(pyH-2).toFixed(1)}" font-family="'Apple SD Gothic Neo',Arial,sans-serif" font-size="9.5" fill="#E53935" font-weight="700">최고가 ${fmt(vMax)}원</text>
+    <line x1="${PL}" y1="${pyL.toFixed(1)}" x2="${(W-PR).toFixed(1)}" y2="${pyL.toFixed(1)}" stroke="#0D9F6E" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+    <text x="${(W-PR+6).toFixed(1)}" y="${(pyL+12).toFixed(1)}" font-family="'Apple SD Gothic Neo',Arial,sans-serif" font-size="9.5" fill="#0D9F6E" font-weight="700">최저가 ${fmt(vMin)}원</text>
+    <g clip-path="url(#clip_${uid})"><path d="${fp}" fill="url(#${uid})"/><path d="${lp}" fill="none" stroke="#1A73E8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>${dots}</g>
+    ${xLabels}</svg>`;
+}
+
+render();
+</script>
+</body>
+</html>
